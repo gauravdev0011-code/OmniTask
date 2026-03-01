@@ -1,18 +1,21 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from database import Base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-class User(Base):
-    __tablename__ = "users"
+# SQLite database file
+DATABASE_URL = "sqlite:///./omnitask.db"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True)
-    password = Column(String)
+# Create engine
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}
+)
 
+# Session for database operations
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
-class Task(Base):
-    __tablename__ = "tasks"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String)
-    completed = Column(Boolean, default=False)
-    owner_id = Column(Integer, ForeignKey("users.id"))
+# Base class for models
+Base = declarative_base()
