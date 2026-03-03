@@ -7,6 +7,11 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
 # -------- TASK --------
 class TaskCreate(BaseModel):
     title: str
