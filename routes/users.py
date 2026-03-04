@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+# routes/users.py
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import SessionLocal
-import models, schemas, auth
+from schemas import UserCreate
+from services import user_service
 
-router = APIRouter()
-
+router = APIRouter(tags=["Users"])
 
 def get_db():
     db = SessionLocal()
@@ -13,17 +14,10 @@ def get_db():
     finally:
         db.close()
 
-
 @router.post("/register")
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    hashed_password = auth.hash_password(user.password)
-
-    new_user = models.User(
-        username=user.username,
-        password=hashed_password
-    )
-
-    db.add(new_user)
-    db.commit()
-
-    return {"message": "User registered"}
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    existing = user_service.get_user_by_username(db, user.username)
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    created_user = user_service.register_user(db, user.username, user.password)
+    return {"message": "User registered", "user_id": created_user.id}
