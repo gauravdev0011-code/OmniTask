@@ -1,3 +1,4 @@
+# routes/tasks.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -30,8 +31,9 @@ def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
 
     db.add(new_task)
     db.commit()
+    db.refresh(new_task)
 
-    return {"message": "Task created"}
+    return new_task
 
 
 # GET USER TASKS
@@ -57,14 +59,22 @@ def update_task(task_id: int, update: schemas.TaskUpdate,
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    task.completed = update.completed
-    task.status = update.status
-    task.priority = update.priority
-    task.due_date = update.due_date
+    if update.completed is not None:
+        task.completed = update.completed
+
+    if update.status is not None:
+        task.status = update.status
+
+    if update.priority is not None:
+        task.priority = update.priority
+
+    if update.due_date is not None:
+        task.due_date = update.due_date
 
     db.commit()
+    db.refresh(task)
 
-    return {"message": "Task updated"}
+    return task
 
 
 # DELETE TASK
