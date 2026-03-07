@@ -1,8 +1,10 @@
+# schemas.py
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 
-# -------- USER --------
+# USER SCHEMAS
 
 class UserCreate(BaseModel):
     username: str
@@ -14,17 +16,16 @@ class UserLogin(BaseModel):
     password: str
 
 
-# -------- TASK --------
+# TASK SCHEMAS
 
 class TaskCreate(BaseModel):
     title: str
-    user_id: int
-    priority: str | None = "medium"
-    due_date: datetime | None = None
+    priority: Optional[str] = "medium"
+    due_date: Optional[datetime] = None
 
 
 class TaskUpdate(BaseModel):
-    completed: bool | None = None
-    status: str | None = None
-    priority: str | None = None
-    due_date: datetime | None = None
+    completed: Optional[bool] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    due_date: Optional[datetime] = None
