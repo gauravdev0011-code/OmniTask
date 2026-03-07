@@ -19,25 +19,12 @@ class UserLogin(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     user_id: int
-    priority: str = "medium"
+    priority: str | None = "medium"
     due_date: datetime | None = None
 
 
 class TaskUpdate(BaseModel):
-    completed: bool
-    status: str
-    priority: str
+    completed: bool | None = None
+    status: str | None = None
+    priority: str | None = None
     due_date: datetime | None = None
-
-
-class TaskResponse(BaseModel):
-    id: int
-    title: str
-    completed: bool
-    status: str
-    priority: str
-    due_date: datetime | None
-    owner_id: int
-
-    class Config:
-        orm_mode = True
