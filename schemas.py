@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 
-# USER SCHEMAS
+# ---------------- USER ----------------
 
 class UserCreate(BaseModel):
     username: str
@@ -16,7 +16,15 @@ class UserLogin(BaseModel):
     password: str
 
 
-# TASK SCHEMAS
+class UserResponse(BaseModel):
+    id: int
+    username: str
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------- TASK ----------------
 
 class TaskCreate(BaseModel):
     title: str
@@ -29,3 +37,16 @@ class TaskUpdate(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     due_date: Optional[datetime] = None
+
+
+class TaskResponse(BaseModel):
+    id: int
+    title: str
+    completed: bool
+    status: str
+    priority: str
+    due_date: Optional[datetime]
+    owner_id: int
+
+    class Config:
+        from_attributes = True
