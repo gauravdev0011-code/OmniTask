@@ -1,7 +1,8 @@
 # routes/tasks.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
+from typing import List, Optional
 
 import models
 import schemas
@@ -11,7 +12,7 @@ router = APIRouter(tags=["Tasks"])
 
 
 # CREATE TASK
-@router.post("/tasks")
+@router.post("/tasks", response_model=schemas.TaskResponse)
 def create_task(
     task: schemas.TaskCreate,
     db: Session = Depends(get_db),
@@ -32,22 +33,54 @@ def create_task(
     return new_task
 
 
-# GET CURRENT USER TASKS
-@router.get("/tasks")
+# GET TASKS WITH PAGINATION + FILTERS
+@router.get("/tasks", response_model=List[schemas.TaskResponse])
 def get_tasks(
+    skip: int = 0,
+    limit: int = 10,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    completed: Optional[bool] = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+
+    query = db.query(models.Task).filter(
+        models.Task.owner_id == current_user.id
+    )
+
+    if status:
+        query = query.filter(models.Task.status == status)
+
+    if priority:
+        query = query.filter(models.Task.priority == priority)
+
+    if completed is not None:
+        query = query.filter(models.Task.completed == completed)
+
+    tasks = query.offset(skip).limit(limit).all()
+
+    return tasks
+
+
+# SEARCH TASKS
+@router.get("/tasks/search", response_model=List[schemas.TaskResponse])
+def search_tasks(
+    q: str,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
 
     tasks = db.query(models.Task).filter(
-        models.Task.owner_id == current_user.id
+        models.Task.owner_id == current_user.id,
+        models.Task.title.ilike(f"%{q}%")
     ).all()
 
     return tasks
 
 
 # UPDATE TASK
-@router.put("/tasks/{task_id}")
+@router.put("/tasks/{task_id}", response_model=schemas.TaskResponse)
 def update_task(
     task_id: int,
     update: schemas.TaskUpdate,
@@ -104,7 +137,7 @@ def delete_task(
 
 
 # OVERDUE TASKS
-@router.get("/tasks/overdue")
+@router.get("/tasks/overdue", response_model=List[schemas.TaskResponse])
 def get_overdue_tasks(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
