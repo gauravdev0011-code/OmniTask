@@ -1,8 +1,9 @@
 # routes/users.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from database import SessionLocal
-from schemas import UserCreate, UserLogin
+from schemas import UserCreate, UserLogin, UserResponse
 from services import user_service
 
 router = APIRouter(tags=["Users"])
@@ -16,8 +17,7 @@ def get_db():
         db.close()
 
 
-# REGISTER
-@router.post("/register")
+@router.post("/register", response_model=UserResponse)
 def register(user: UserCreate, db: Session = Depends(get_db)):
 
     existing = user_service.get_user_by_username(db, user.username)
@@ -31,10 +31,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         user.password
     )
 
-    return {"message": "User registered", "user_id": created_user.id}
+    return created_user
 
 
-# LOGIN
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
 
@@ -50,4 +49,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             detail="Invalid username or password"
         )
 
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
