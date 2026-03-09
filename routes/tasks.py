@@ -1,4 +1,5 @@
 # routes/tasks.py
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -7,11 +8,11 @@ from typing import List, Optional
 import models
 import schemas
 from dependencies import get_db, get_current_user
+from logger import logger
 
 router = APIRouter(tags=["Tasks"])
 
 
-# CREATE TASK
 @router.post("/tasks", response_model=schemas.TaskResponse)
 def create_task(
     task: schemas.TaskCreate,
@@ -30,10 +31,11 @@ def create_task(
     db.commit()
     db.refresh(new_task)
 
+    logger.info(f"Task created by user {current_user.username}")
+
     return new_task
 
 
-# GET TASKS WITH PAGINATION + FILTERS
 @router.get("/tasks", response_model=List[schemas.TaskResponse])
 def get_tasks(
     skip: int = 0,
@@ -63,7 +65,6 @@ def get_tasks(
     return tasks
 
 
-# SEARCH TASKS
 @router.get("/tasks/search", response_model=List[schemas.TaskResponse])
 def search_tasks(
     q: str,
@@ -79,7 +80,6 @@ def search_tasks(
     return tasks
 
 
-# UPDATE TASK
 @router.put("/tasks/{task_id}", response_model=schemas.TaskResponse)
 def update_task(
     task_id: int,
@@ -111,10 +111,11 @@ def update_task(
     db.commit()
     db.refresh(task)
 
+    logger.info(f"Task {task_id} updated by {current_user.username}")
+
     return task
 
 
-# DELETE TASK
 @router.delete("/tasks/{task_id}")
 def delete_task(
     task_id: int,
@@ -133,20 +134,6 @@ def delete_task(
     db.delete(task)
     db.commit()
 
+    logger.info(f"Task {task_id} deleted by {current_user.username}")
+
     return {"message": "Task deleted"}
-
-
-# OVERDUE TASKS
-@router.get("/tasks/overdue", response_model=List[schemas.TaskResponse])
-def get_overdue_tasks(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-
-    tasks = db.query(models.Task).filter(
-        models.Task.owner_id == current_user.id,
-        models.Task.due_date < datetime.utcnow(),
-        models.Task.completed == False
-    ).all()
-
-    return tasks
