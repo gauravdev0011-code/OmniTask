@@ -1,13 +1,12 @@
 # services/user_service.py
+
 from sqlalchemy.orm import Session
-import models
-import auth
 from datetime import datetime, timedelta
 from jose import jwt
 
-SECRET_KEY = "supersecretkey"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+import models
+import auth
+from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 def register_user(db: Session, username: str, password: str):
@@ -41,7 +40,9 @@ def login_user(db: Session, username: str, password: str):
     if not auth.verify_password(password, user.password):
         return None
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
 
     token = create_access_token(
         data={"sub": user.username},
